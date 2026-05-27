@@ -468,7 +468,19 @@ jobs:
             reports/
             logs/
           retention-days: 30
-      
+            - name: 推送报告到仓库（供 Obsidian 自动同步）
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # 将报告和日志复制到 Obsidian 模板目录
+          mkdir -p "01 - 日记/每日股票/$(TZ='Asia/Shanghai' date +%Y-%m-%d)"
+          cp -r reports/* "01 - 日记/每日股票/$(TZ='Asia/Shanghai' date +%Y-%m-%d)/" 2>/dev/null || true
+          
+          git add "01 - 日记/"
+          git diff --staged --quiet || git commit -m "📊 每日股票分析 $(TZ='Asia/Shanghai' date +%Y-%m-%d)"
+          git push https://x-access-token:${{ secrets.GH_PAT }}@github.com/${{ github.repository }}.git HEAD:main
       - name: 显示运行结果
         if: always()
         run: |
